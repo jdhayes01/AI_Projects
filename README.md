@@ -1,2 +1,2 @@
 # AI_Projects
-Basic "artificial intelligence" projects from university
+Artificial intelligence gaming projects from university written in Java and one project in JavaScript. 
