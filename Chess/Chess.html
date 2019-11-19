@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chess</title>
+    <link rel="stylesheet" href="css/chessboard-0.3.0.min.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="js/chessboard-0.3.0.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js"></script>
+  </head>
+  <body>
+    <div id="board" style="width: 400px"></div>
+    <script>
+        var board,
+  		game = new Chess(); //create chess object
+
+		// do not pick up pieces if the game is over
+		// only pick up pieces for White
+		var onDragStart = function(source, piece, position, orientation) {
+  			if (game.in_checkmate() === true || game.in_draw() === true || piece.search(/^b/) !== -1) { return false; }
+		};
+		
+	function MinMax(depth, game, playerColor,
+                            alpha=Number.NEGATIVE_INFINITY,
+                            beta=Number.POSITIVE_INFINITY,
+                            isMaximizingPlayer=true) {
+  		// Base case: evaluate board
+  		if (depth === 0) {
+    		value = CalculateValue();
+    		return [value, null]
+  		}
+
+  		// Recursive case: search possible moves
+  		var bestMove = null; // best move not set yet
+  		var possibleMoves = game.moves();//pull all possible moves
+  		// Set random order for possible moves
+  		possibleMoves.sort(function(a, b){return 0.5 - Math.random()});
+  		// Set a default best move value
+  		var bestMoveValue = isMaximizingPlayer ? Number.NEGATIVE_INFINITY
+                                         	   : Number.POSITIVE_INFINITY;
+  		// Search through all possible moves
+  		for (var i = 0; i < possibleMoves.length; i++) {
+    		var move = possibleMoves[i]; 
+    		// Make the move, but undo before exiting loop
+    		game.move(move);
+    		// Recursively get the value from this move
+    		value = MinMax(depth-1, game, playerColor, alpha, beta, !isMaximizingPlayer);
+    		// Log the value of this move
+			console.log(isMaximizingPlayer ? 'Max: ' : 'Min: ');
+			console.log('Depth: ' + depth + ' | Move: ' + move + ' | A: ' + alpha + ' | B: ' + beta);
+    	if (isMaximizingPlayer) {
+			// Look for moves that maximize position
+      		if (value > bestMoveValue) {
+        		bestMoveValue = value;
+        		bestMove = move;
+			}
+      		alpha = Math.max(alpha, value); //take max value
+    		} else {
+      		// Look for moves that minimize position
+      		if (value < bestMoveValue) {
+        		bestMoveValue = value;
+        		bestMove = move;
+      		}
+      		beta = Math.min(beta, value);//take min value
+    		}
+    		// Undo previous move
+    		game.undo();
+    		// Check for alpha beta pruning
+    		if (beta <= alpha) {
+      			console.log('Prune', alpha, beta);
+      			break;
+    		}
+  		}
+		
+  	// Log the best move at the current depth
+  	//console.log('Depth: ' + depth + ' | Best Move: ' + bestMove + ' | ' + bestMoveValue + ' | A: ' + alpha + ' | B: ' + beta);
+  	// Return the best move, or the only move
+  	return [bestMoveValue, bestMove || possibleMoves[0]];
+}
+		
+		function CalculateValue(){
+			var boardString = game.ascii();
+			var bvalue=0;
+			console.log(boardString);
+			/*var playerPieces = {
+				'P': 100,
+    			'N': 350,
+    			'B': 350,
+    			'R': 525,
+    			'Q': 1000,
+    			'K': 10000
+			};
+			var aiPieces ={
+				'p': -100,
+    			'n': -350,
+    			'b': -350,
+    			'r': -525,
+    			'q': -1000,
+    			'k': -10000
+			};*/
+			for(var i = 0; i<boardString.length;i++){
+						//calculate piece value
+						if(boardString[i]=='p'){//black pawn
+							bvalue-=10;
+						}
+						else if(boardString[i]=='P'){//white pawn
+							bvalue+=10;
+						}
+						else if(boardString[i]=='n'){//black knight
+							bvalue-=25;
+						}
+						else if(boardString[i]=='N'){//white knight
+							bvalue+=25;
+						}
+						else if(boardString[i]=='b'){//black bishop
+							bvalue-=25;
+						}
+						else if(boardString[i]=='B'){//white bishop
+							bvalue+=25;
+						}
+						else if(boardString[i]=='r'){//black rook
+							bvalue-=50;
+						}
+						else if(boardString[i]=='R'){//white rook
+							bvalue+=50;
+						}
+						else if(boardString[i]=='q'){//black queen
+							bvalue-=100;
+						}
+						else if(boardString[i]=='Q'){//white queen
+							bvalue+=100;
+						}
+						else if(boardString[i]=='k'){//black king
+							bvalue-=1000;
+						}
+						else if(boardString[i]=='K'){//white king
+							bvalue+=1000;
+						}
+						/*if(playerPieces[boardString[i]]){
+							bvalue += playerPieces[boardString[i]];
+						}
+						else if(aiPieces[boardString[i]]){
+							bvalue += aiPieces[boardString[i]];
+						}*/
+						
+					}
+					
+					console.log("bvalue: "+bvalue);
+					return bvalue;
+				}
+
+		//inital function that just calculated best move based on board value
+		/*var makeCalculatedMove = function () {
+
+    		var newGameMoves = game.moves();
+    		var bestMove = null;
+    		//use any negative large number
+			var bestValue = -9999;
+
+    		for (var i = 0; i < newGameMoves.length; i++) {
+				var newGameMove = newGameMoves[i];
+        		game.move(newGameMove);
+
+        		//evaluate board
+        		var boardValue = CalculateValue();
+				game.undo();
+				console.log("board value: "+boardValue);
+				console.log("best value: "+bestValue);
+        		if (boardValue > bestValue) {
+            		bestValue = boardValue;
+            		bestMove = newGameMove;
+        		}
+    		}
+			
+    		game.move(bestMove);
+			board.position(game.fen());
+
+		};*/
+		
+		//AI call
+		var makeMinMaxMove = function() {
+			var move = MinMax(3, game, game.turn()); //call min mas function
+			console.log("Best Move: "+move[1]+" Value: "+move[0]); //output returned move and value
+    		game.move(move[1]); //make move
+			board.position(game.fen()); //set board to new current board state
+		}
+		//Player move
+		var onDrop = function(source, target) {
+  			// see if the move is legal
+  			var move = game.move({
+    			from: source,
+    			to: target,
+    			promotion: 'q' // NOTE: always promote to a queen for example simplicity
+  			});
+  			// illegal move
+  			if (move === null) return 'snapback';
+  			// make random legal move for black
+  			window.setTimeout(makeMinMaxMove, 250);
+		};
+
+		// update the board position after the piece snap
+		// for castling, en passant, pawn promotion
+		var onSnapEnd = function() {
+  			board.position(game.fen());
+		};
+		//variable for board properties
+		var cfg = {
+  			draggable: true,
+  			position: 'start',
+  			onDragStart: onDragStart,
+  			onDrop: onDrop,
+  			onSnapEnd: onSnapEnd
+		};
+		//draw board in div with chess board object
+		board = ChessBoard('board', cfg);
+	  </script>
+  </body>
+</html>
